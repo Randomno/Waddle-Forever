@@ -1,6 +1,6 @@
 # How to play Waddle Forever
 
-1. Download the latest version [here](https://github.com/nhaar/Waddle-Forever/releases/latest). In the "Assets" section, click the .zip to download it (Choose your version, windows or linux, only 64-bits supported):
+1. Download the latest version [here](https://github.com/nhaar/Waddle-Forever/releases/latest). In the "Assets" section, click the .zip to download it (Choose your version, Windows or Lnux, only 64-bits supported):
 
 ![Download](./download.png)
 
