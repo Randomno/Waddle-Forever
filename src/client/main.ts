@@ -21,6 +21,9 @@ log.initialize();
 
 console.log = log.log;
 
+console.log(process.versions);
+
+
 const store = createStore();
 
 setLanguageInStore(store, 'en')
@@ -31,7 +34,7 @@ if (process.platform === 'linux') {
 }
 
 
-loadFlashPlugin(app);
+//loadFlashPlugin(app);
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

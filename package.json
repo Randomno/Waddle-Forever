@@ -97,7 +97,7 @@
     "archiver": "^7.0.1",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
-    "electron": "^10.0.0",
+    "electron": "^39.2.7",
     "electron-builder": "23.0.2",
     "eslint": "^8.34.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
