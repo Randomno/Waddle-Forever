@@ -255,6 +255,10 @@ would need to investigated`
     {
       file: 'ClientLoad2009-06-26.swf',
       comment: 'Removed domain check.'
+    },
+    {
+      file: 'load2008-08-15.swf',
+      comment: 'Found in various old trainers. Domain check has likely been removed. Further changes to fix paths.'
     }
   ],
   [APPROXIMATION]: [
@@ -1992,6 +1996,14 @@ Unknown if its teleporting to village functions would be accurate`
     {
       file: 'summer_kickoff_2007/cove_update.swf',
       comment: 'Made by Doubleuman'
+    },
+    {
+      file: 'airtower_cpip.swf',
+      comment: 'Moved Airtower code out of class file and added shell.getLoginServer() call'
+    },
+    {
+      file: 'engine_cpip.swf',
+      comment: 'Made self-initialising. Changed .path to .file_path. Added showInterface call after roomInitiated.'
     }
   ],
   [MOD]: [
