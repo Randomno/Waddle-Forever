@@ -1,11 +1,3 @@
-function removeBalloonByPlayerId(player_id)
-{
-   var _loc2_ = getBalloonMovieClip(player_id);
-   if(_loc2_ != undefined)
-   {
-      _loc2_.removeMovieClip();
-   }
-}
 function handleStartEngine()
 {
 }
@@ -725,7 +717,7 @@ function removePlayer(player_id)
    var _loc3_ = getNicknameMovieClip(player_id);
    _loc2_.removeMovieClip();
    _loc3_.removeMovieClip();
-   removeBalloonByPlayerId(player_id);
+   INTERFACE.removeBalloonByPlayerId(player_id);
    removePlayerDepth(player_id);
 }
 function updatePlayerFromId(player_id)
