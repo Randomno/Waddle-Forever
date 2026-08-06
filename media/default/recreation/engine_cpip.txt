@@ -1,0 +1,1695 @@
+function handleStartEngine()
+{
+}
+function handleUpdateShellState(event)
+{
+   if(event.state == SHELL.PLAY_STATE)
+   {
+      startMouse();
+   }
+   else
+   {
+      stopMouse();
+   }
+   if(event.state == SHELL.EDIT_STATE)
+   {
+      puffleManager.cancelAllPuffleInteractions();
+   }
+}
+function handleAddPlayer(event)
+{
+   if(!SHELL.isMyPlayer(event.player_id) && isRoomReady())
+   {
+      addPlayer(event);
+   }
+}
+function handleRemovePlayer(playerID)
+{
+   if(!SHELL.isMyPlayer(playerID))
+   {
+      removePlayer(playerID);
+   }
+}
+function sendPlayerMove(x, y, is_trigger, frame)
+{
+   var _loc1_ = SHELL.getMyPlayerId();
+   var _loc4_ = getPlayerMovieClip(_loc1_);
+   var _loc8_ = Math.round(_loc4_._x);
+   var _loc7_ = Math.round(_loc4_._y);
+   var _loc6_ = findPlayerPath(_loc1_,x,y);
+   var _loc2_ = _loc6_.x;
+   var _loc3_ = _loc6_.y;
+   var _loc9_ = findDistance(_loc8_,_loc7_,_loc2_,_loc3_);
+   if(_loc9_ > 10)
+   {
+      setPlayerAction("move");
+      movePlayer(_loc1_,_loc2_,_loc3_,is_trigger,frame);
+      SHELL.sendPlayerMove(_loc2_,_loc3_);
+   }
+   else if(frame != undefined)
+   {
+      SHELL.sendPlayerFrame(frame);
+   }
+}
+function handlePlayerMove(player_ob)
+{
+   var _loc1_ = player_ob.player_id;
+   var _loc7_;
+   var _loc6_;
+   var _loc3_;
+   var _loc4_;
+   var _loc5_;
+   if(!SHELL.isMyPlayer(_loc1_))
+   {
+      _loc7_ = player_ob.x;
+      _loc6_ = player_ob.y;
+      _loc3_ = findPlayerPath(_loc1_,_loc7_,_loc6_);
+      _loc4_ = _loc3_.x;
+      _loc5_ = _loc3_.y;
+      movePlayer(_loc1_,_loc4_,_loc5_);
+   }
+}
+function handleRequestPuffleMove(event)
+{
+   var _loc1_ = puffleManager.getRandomSafeZonePoint();
+   SHELL.sendPuffleMove(event.id,_loc1_.x,_loc1_.y);
+}
+function handlePuffleMove(event)
+{
+   var _loc2_ = new flash.geom.Point(event.x,event.y);
+   puffleManager.movePuffleToPointByID(event.id,_loc2_,event.happy);
+}
+function handlePuffleInteraction(event)
+{
+   if(event.id == undefined)
+   {
+      return undefined;
+   }
+   if(event.interactionType == undefined)
+   {
+      return undefined;
+   }
+   var _loc2_ = IGLOO.getFurnitureOnPointByType(new flash.geom.Point(event.x,event.y),event.interactionType);
+   if(_loc2_ == undefined)
+   {
+      SHELL.sendPuffleInteraction(false,event.id,event.interactionType,event.x,event.y);
+      return undefined;
+   }
+   puffleManager.makePuffleInteractWithFurnitureByID(event.id,_loc2_);
+}
+function handlePuffleWalk(event)
+{
+   if(event.isWalking)
+   {
+      puffleManager.walkPuffleByID(event.id);
+   }
+   else
+   {
+      puffleManager.stopWalkingPuffleByID(event.id);
+   }
+}
+function sendPlayerAction(frame)
+{
+   var _loc1_ = SHELL.getMyPlayerId();
+   if(validateUpdateFrame(_loc1_,frame))
+   {
+      updatePlayerFrame(_loc1_,frame,true);
+      setPlayerAction("custom");
+      SHELL.sendPlayerAction(frame);
+   }
+}
+function handlePlayerAction(ob)
+{
+   var _loc1_ = ob.player_id;
+   var _loc2_ = ob.frame;
+   if(!SHELL.isMyPlayer(_loc1_))
+   {
+      if(validateUpdateFrame(_loc1_,_loc2_))
+      {
+         updatePlayerFrame(_loc1_,_loc2_,true);
+      }
+   }
+}
+function sendPlayerSitDown()
+{
+   sendPlayerFrame(getPlayerDirectionToMouse() + 16);
+}
+function sendPlayerFrame(frame)
+{
+   var _loc1_ = SHELL.getMyPlayerId();
+   if(validateUpdateFrame(_loc1_,frame))
+   {
+      updatePlayerFrame(_loc1_,frame);
+      setPlayerAction("custom");
+      SHELL.sendPlayerFrame(frame);
+   }
+}
+function handlePlayerFrame(ob)
+{
+   var _loc1_ = ob.player_id;
+   var _loc2_ = ob.frame;
+   if(!SHELL.isMyPlayer(_loc1_))
+   {
+      if(validateUpdateFrame(_loc1_,_loc2_))
+      {
+         updatePlayerFrame(_loc1_,_loc2_);
+      }
+   }
+}
+function handlePuffleFrame(event)
+{
+   puffleManager.updatePuffleFrameByID(event.id,event.frame);
+}
+function sendThrowBall(x, y)
+{
+   setPlayerAction("throw");
+   throwBall(SHELL.getMyPlayerId(),x,y,-6,-100,20);
+   SHELL.sendThrowBall(x,y);
+}
+function handleThrowBall(ob)
+{
+   var _loc2_ = ob.player_id;
+   var _loc4_;
+   var _loc3_;
+   if(!SHELL.isMyPlayer(_loc2_))
+   {
+      _loc4_ = ob.x;
+      _loc3_ = ob.y;
+      throwBall(_loc2_,_loc4_,_loc3_,-6,-100,20);
+   }
+}
+function handleUpdatePlayer(player_ob)
+{
+   updatePlayer(player_ob);
+}
+function sendOpenBook(book_id)
+{
+   setPlayerAction("reading");
+   loadPlayerBook(SHELL.getMyPlayerId(),book_id);
+   SHELL.sendOpenBook(book_id);
+}
+function handleOpenBook(player_id, book_id)
+{
+   if(!SHELL.isMyPlayer(player_id))
+   {
+      loadPlayerBook(player_id,book_id);
+   }
+}
+function sendCloseBook()
+{
+   setPlayerAction("reading");
+   removePlayerBook(SHELL.getMyPlayerId());
+   SHELL.sendCloseBook();
+}
+function handleCloseBook(player_id)
+{
+   if(!SHELL.isMyPlayer(player_id))
+   {
+      removePlayerBook(player_id);
+   }
+}
+function sendJoinRoom(name, x, y)
+{
+   SHELL.sendJoinRoom(name,x,y);
+}
+function sendGameOver(score, room)
+{
+   INTERFACE.showPrompt("wait");
+   setGameOverRoom(room);
+   SHELL.sendGameOver(score);
+}
+function sendJoinGameOverRoom()
+{
+   var _loc1_ = getGameOverRoom();
+   if(_loc1_ != undefined)
+   {
+      sendJoinRoom(_loc1_,0,0);
+   }
+   else
+   {
+      sendJoinLastRoom();
+   }
+}
+function sendJoinLastRoom()
+{
+   SHELL.sendJoinLastRoom();
+}
+function handleJoinRoom()
+{
+   var _loc1_ = SHELL.getRoomObject();
+   stopMouse();
+   loadRoom(_loc1_,false);
+}
+function handleJoinPlayerIgloo()
+{
+   var _loc1_ = SHELL.getPlayerIglooObject();
+   stopMouse();
+   loadRoom(_loc1_,true);
+}
+function handleJoinGame()
+{
+   var _loc1_ = SHELL.getGameObject();
+   stopMouse();
+   loadGame(_loc1_);
+}
+function handleAddPuffle(event)
+{
+   puffleManager.addPuffleData(event);
+}
+function loadRoom(room_ob, is_player_room)
+{
+   setRoomReady(false);
+   if(is_player_room == undefined)
+   {
+      is_player_room = false;
+   }
+   var _loc6_ = room_ob.name;
+   var _loc3_ = room_ob.file_path;
+   removeRoom();
+   removeGame();
+   this.createEmptyMovieClip("room_mc",100);
+   room_mc.createEmptyMovieClip("load_mc",1);
+   var _loc4_ = new MovieClipLoader();
+   var _loc2_ = new Object();
+   _loc2_.onLoadProgress = function(target_mc, bytes_loaded, bytes_total)
+   {
+      var _loc1_ = Math.floor(bytes_loaded / bytes_total * 100);
+   };
+   _loc2_.onLoadInit = function(target_mc)
+   {
+      target_mc._lockroot = true;
+      if(!is_player_room)
+      {
+         setupRoom(target_mc);
+      }
+      else
+      {
+         SHELL.setGlobalIgloo(target_mc);
+         IGLOO = target_mc;
+         target_mc.setDependencies(SHELL,INTERFACE,ENGINE);
+         target_mc.init();
+      }
+   };
+   var _loc5_ = SHELL.getLocalizedString("load_" + _loc6_);
+   SHELL.showLoading(_loc5_,_loc2_);
+   _loc4_.addListener(_loc2_);
+   _loc4_.loadClip(_loc3_,room_mc.load_mc);
+}
+function setupRoom(mc)
+{
+   var _loc3_;
+   if(mc.room_mc != undefined)
+   {
+      _loc3_ = mc.room_mc;
+      _loc3_.start_x = mc.start_x;
+      _loc3_.start_y = mc.start_y;
+   }
+   else
+   {
+      _loc3_ = mc;
+   }
+   setRoomMovieClip(_loc3_);
+   var _loc1_;
+   for(var _loc4_ in mc)
+   {
+      if(typeof mc[_loc4_] == "movieclip")
+      {
+         _loc1_ = mc[_loc4_];
+         if(_loc1_ == mc.block_mc)
+         {
+            setRoomBlockMovieClip(_loc1_);
+            _loc1_._visible = false;
+         }
+         else if(_loc1_ == mc.triggers_mc)
+         {
+            setRoomTriggersMovieClip(_loc1_);
+            _loc1_._visible = false;
+         }
+         else if(_loc1_ == mc.interface_mc)
+         {
+            setRoomInterfaceMovieClip(_loc1_);
+            _loc1_.swapDepths(900002);
+         }
+         else if(_loc1_ == mc.foreground_mc)
+         {
+            _loc1_.swapDepths(900001);
+         }
+         else if(_loc1_ == mc.background_mc)
+         {
+            _loc1_._visible = true;
+         }
+         else if(_loc1_._x > 0 && _loc3_._x < MAX_SCREEN_WIDTH)
+         {
+            if(_loc1_._y > 0 && _loc3_._y < MAX_SCREEN_HEIGHT)
+            {
+               updateObjectDepth(_loc1_);
+            }
+         }
+      }
+   }
+   setRoomReady(true);
+   setupTables();
+   setupWaddle();
+   setupPlayer();
+   SHELL.startRoomMusic();
+   _loc3_.startRoom();
+   SHELL.roomInitiated();
+   INTERFACE.showInterface();
+   puffleManager.setupPathEngine();
+   puffleManager.clearPuffles();
+}
+function removeRoom()
+{
+   room_mc.load_mc.destroyRoom();
+   SHELL.roomDestroyed();
+   room_mc.removeMovieClip();
+   var _loc1_;
+   for(var _loc2_ in INTERFACE.nicknames_mc)
+   {
+      _loc1_ = INTERFACE.nicknames_mc[_loc2_];
+      if(_loc1_._parent == INTERFACE.nicknames_mc)
+      {
+         _loc1_.removeMovieClip();
+      }
+   }
+}
+function checkTrigger(mc)
+{
+   var _loc1_ = getRoomTriggersMovieClip();
+   var _loc3_ = mc._x;
+   var _loc2_ = mc._y;
+   if(_loc1_.hitTest(_loc3_,_loc2_,true))
+   {
+      for(var _loc4_ in _loc1_)
+      {
+         if(_loc1_[_loc4_].hitTest(_loc3_,_loc2_,true))
+         {
+            _loc1_[_loc4_].triggerFunction();
+            break;
+         }
+      }
+   }
+}
+function setRoomMovieClip(mc)
+{
+   my_room_movieclips.room_mc = mc;
+}
+function getRoomMovieClip()
+{
+   return my_room_movieclips.room_mc;
+}
+function getRoomWaypointsClip()
+{
+   return getRoomMovieClip()._parent.waypointsClip;
+}
+function getPuffleSafeZoneClip()
+{
+   return getRoomMovieClip()._parent.pet_area;
+}
+function setRoomInterfaceMovieClip(mc)
+{
+   my_room_movieclips.interface_mc = mc;
+}
+function getRoomInterfaceMovieClip()
+{
+   return my_room_movieclips.interface_mc;
+}
+function setRoomTriggersMovieClip(mc)
+{
+   my_room_movieclips.triggers_mc = mc;
+}
+function getRoomTriggersMovieClip()
+{
+   return my_room_movieclips.triggers_mc;
+}
+function setRoomBlockMovieClip(mc)
+{
+   my_room_movieclips.block_mc = mc;
+}
+function getRoomBlockMovieClip()
+{
+   return my_room_movieclips.block_mc;
+}
+function setRoomBallMovieClip(mc)
+{
+   my_room_movieclips.ball_mc = mc;
+   is_ball_moving = false;
+}
+function getRoomBallMovieClip()
+{
+   return my_room_movieclips.ball_mc;
+}
+function setRoomReady(is_ready)
+{
+   is_room_ready = is_ready;
+}
+function isRoomReady()
+{
+   return is_room_ready;
+}
+function LEGACY_showWindow(name, ob, room_id)
+{
+   var _loc2_;
+   if(name == "Found Item")
+   {
+      INTERFACE.buyInventory(ob.ItemId);
+   }
+   else if(room_id != undefined)
+   {
+      _loc2_ = SHELL.getRoomNameById(room_id);
+      sendGameOver(ob.score,_loc2_);
+   }
+   else
+   {
+      sendGameOver(ob.score);
+   }
+}
+function LEGACY_checkPlayerItem(item_id)
+{
+   return SHELL.isItemInMyInventory(item_id);
+}
+function LEGACY_joinRoom()
+{
+   SHELL.sendJoinLastRoom();
+}
+function loadGame(game_ob)
+{
+   var _loc5_ = game_ob.file_path;
+   var game_name = game_ob.name;
+   removeRoom();
+   removeGame();
+   setGameOverRoom(undefined);
+   this.createEmptyMovieClip("game_mc",100);
+   game_mc.createEmptyMovieClip("load_mc",1);
+   game_mc._lockroot = true;
+   game_mc.myCrumbs = new Object();
+   game_mc.myCrumbs.colors = SHELL.getPlayerColoursObject();
+   var _loc2_ = SHELL.getPlayerObjectById(SHELL.getMyPlayerId());
+   game_mc.myPlayer = new Object();
+   game_mc.myPlayer.Colour = _loc2_.colour_id;
+   game_mc.myPlayer.Hand = _loc2_.hand;
+   game_mc.myMediaPath = SHELL.getGameContentPath().split("/").slice(0,-1).join("/") + "/";
+   game_mc.checkPlayerItem = LEGACY_checkPlayerItem;
+   game_mc.showWindow = LEGACY_showWindow;
+   game_mc.joinRoom = LEGACY_joinRoom;
+   var loader = new MovieClipLoader();
+   loader.loadClip(_loc5_,game_mc.load_mc);
+   var listener = new Object();
+   listener.onLoadProgress = function(target_mc, bytes_loaded, bytes_total)
+   {
+      var _loc1_ = Math.floor(bytes_loaded / bytes_total * 100);
+      WINDOW.progressbar_mc.gotoAndStop(_loc1_);
+   };
+   listener.onLoadInit = function(target_mc)
+   {
+      loader.removeListener(listener);
+      if(game_name.indexOf("mission") != -1)
+      {
+         SHELL.hideLoading();
+         SHELL.startGameMusic();
+      }
+   };
+   var _loc3_ = SHELL.getLocalizedString("load_" + game_name);
+   SHELL.showLoading(_loc3_,listener);
+   loader.addListener(listener);
+}
+function sendJoinGame(name, is_prompt)
+{
+   var _loc2_;
+   if(is_prompt)
+   {
+      setActiveGame(name);
+      _loc2_ = SHELL.getLocalizedString(name + "_prompt");
+      INTERFACE.showPrompt("game",_loc2_,undefined,clickJoinGamePrompt);
+   }
+   else
+   {
+      SHELL.sendJoinGame(name);
+   }
+}
+function clickJoinGamePrompt()
+{
+   var _loc1_ = getActiveGame();
+   sendJoinGame(_loc1_,false);
+}
+function handleGameOver(ob)
+{
+   traceObject(ob);
+   var _loc2_ = ob.total;
+   var _loc3_ = ob.earned;
+   var _loc4_ = ob.is_table;
+   if(_loc4_)
+   {
+      game_over_object = new Object();
+      game_over_object.total_coins = _loc2_;
+      game_over_object.coins_earned = _loc3_;
+   }
+   else
+   {
+      INTERFACE.showGameOverPrompt(_loc2_,_loc3_,sendJoinGameOverRoom);
+   }
+}
+function showGameOver()
+{
+   var _loc1_ = game_over_object.total_coins;
+   var _loc2_ = game_over_object.coins_earned;
+   INTERFACE.showGameOverPrompt(_loc1_,_loc2_);
+}
+function removeGame()
+{
+   game_mc.removeMovieClip();
+}
+function setActiveGame(name)
+{
+   active_game = name;
+}
+function getActiveGame()
+{
+   return active_game;
+}
+function setGameOverRoom(name)
+{
+   game_over_room = name;
+}
+function getGameOverRoom()
+{
+   return game_over_room;
+}
+function setupPlayer()
+{
+   var _loc1_ = SHELL.getMyPlayerId();
+   var _loc2_ = SHELL.getPlayerObjectById(_loc1_);
+   setupDepthList();
+   add_more_players = true;
+   addPlayer(_loc2_);
+   startMouse();
+}
+function addPlayer(player_ob)
+{
+   var _loc5_ = getRoomMovieClip();
+   var _loc11_ = getRoomBlockMovieClip();
+   var player_id = player_ob.player_id;
+   var nickname = player_ob.nickname;
+   removePlayer(player_id);
+   var _loc7_ = findPlayerDepth(player_id);
+   var _loc6_ = "p" + player_id;
+   INTERFACE.nicknames_mc.attachMovie("nickname",_loc6_,_loc7_);
+   INTERFACE.nicknames_mc[_loc6_].name_txt.text = player_ob.nickname;
+   _loc5_.createEmptyMovieClip(_loc6_,_loc7_);
+   var _loc2_ = _loc5_[_loc6_];
+   _loc2_.createEmptyMovieClip("art_mc",1);
+   _loc2_.createEmptyMovieClip("book_mc",70);
+   _loc2_.createEmptyMovieClip("head_mc",60);
+   _loc2_.createEmptyMovieClip("face_mc",50);
+   _loc2_.createEmptyMovieClip("hand_mc",40);
+   _loc2_.createEmptyMovieClip("neck_mc",30);
+   _loc2_.createEmptyMovieClip("body_mc",20);
+   _loc2_.createEmptyMovieClip("feet_mc",10);
+   _loc2_.colour_id = 0;
+   _loc2_.head = 0;
+   _loc2_.face = 0;
+   _loc2_.neck = 0;
+   _loc2_.body = 0;
+   _loc2_.hand = 0;
+   _loc2_.feet = 0;
+   _loc2_.player_id = player_id;
+   _loc2_.nickname = nickname;
+   _loc2_.depth_id = _loc7_;
+   _loc2_.frame = player_ob.frame;
+   _loc2_.is_moving = false;
+   _loc2_.is_ready = false;
+   _loc2_.is_reading = false;
+   _loc2_.is_table = false;
+   _loc2_.onRelease = function()
+   {
+      clickPlayer(this.player_id,this.nickname);
+   };
+   if(!isValidXPosition(player_ob.x))
+   {
+      player_ob.x = getValidXPosition(player_ob.x);
+   }
+   if(!isValidYPosition(player_ob.y))
+   {
+      player_ob.y = getValidYPosition(player_ob.y);
+   }
+   var _loc10_ = _loc11_.hitTest(player_ob.x,player_ob.y,true);
+   if(_loc10_)
+   {
+      player_ob.x = findRandomLocation(_loc5_.start_x,40);
+      player_ob.y = findRandomLocation(_loc5_.start_y,40);
+   }
+   updatePlayerPosition(player_id,player_ob.x,player_ob.y);
+   var _loc8_ = new MovieClipLoader();
+   var _loc4_ = new Object();
+   _loc4_.onLoadStart = function(target_mc)
+   {
+      target_mc._visible = false;
+   };
+   _loc4_.onLoadInit = function(target_mc)
+   {
+      updatePlayerFromId(target_mc._parent.player_id);
+      checkTablesForPlayer(target_mc._parent.player_id);
+      addAllPlayers();
+      target_mc._parent.is_ready = true;
+      target_mc._visible = true;
+      if(SHELL.isMyPlayer(player_id))
+      {
+         if(!SHELL.getIsRoomIgloo())
+         {
+            SHELL.hideLoading();
+         }
+      }
+   };
+   var _loc9_;
+   if(SHELL.isMyPlayer(player_id))
+   {
+      _loc9_ = SHELL.getLocalizedString("load_penguin");
+      SHELL.showLoading(_loc9_,_loc4_);
+   }
+   _loc8_.addListener(_loc4_);
+   _loc8_.loadClip(SHELL.getPath("penguin"),_loc2_.art_mc);
+}
+function hideAllPlayers()
+{
+   var _loc3_ = getRoomMovieClip();
+   var _loc1_ = SHELL.getPlayerList();
+   for(var _loc2_ in _loc1_)
+   {
+      getPlayerMovieClip(_loc1_[_loc2_].player_id)._visible = false;
+   }
+   INTERFACE.nicknames_mc._visible = false;
+   INTERFACE.balloons_mc._visible = false;
+}
+function showAllPlayers()
+{
+   var _loc3_ = getRoomMovieClip();
+   var _loc1_ = SHELL.getPlayerList();
+   for(var _loc2_ in _loc1_)
+   {
+      getPlayerMovieClip(_loc1_[_loc2_].player_id)._visible = true;
+   }
+   INTERFACE.nicknames_mc._visible = true;
+   INTERFACE.balloons_mc._visible = true;
+}
+function addAllPlayers()
+{
+   var _loc1_;
+   var _loc2_;
+   if(add_more_players)
+   {
+      add_more_players = false;
+      _loc1_ = SHELL.getPlayerList();
+      for(var _loc3_ in _loc1_)
+      {
+         _loc2_ = _loc1_[_loc3_].player_id;
+         if(_loc2_ != SHELL.getMyPlayerId())
+         {
+            addPlayer(_loc1_[_loc3_]);
+         }
+      }
+   }
+}
+function removePlayer(player_id)
+{
+   var _loc2_ = getPlayerMovieClip(player_id);
+   var _loc3_ = getNicknameMovieClip(player_id);
+   _loc2_.removeMovieClip();
+   _loc3_.removeMovieClip();
+   INTERFACE.removeBalloonByPlayerId(player_id);
+   removePlayerDepth(player_id);
+}
+function updatePlayerFromId(player_id)
+{
+   var _loc1_ = SHELL.getPlayerObjectById(player_id);
+   updatePlayer(_loc1_);
+}
+function updatePlayer(player_ob)
+{
+   var _loc3_ = player_ob.player_id;
+   var _loc1_ = getPlayerMovieClip(_loc3_);
+   if(!SHELL.isMyPlayer(_loc3_))
+   {
+      _loc1_.art_mc.ring._visible = false;
+   }
+   if(_loc1_.frame > 26)
+   {
+      _loc1_.frame = 1;
+   }
+   if(_loc1_.colour_id != player_ob.colour_id)
+   {
+      updateColour(_loc1_.art_mc.body,player_ob.colour_id);
+      _loc1_.colour_id = player_ob.colour_id;
+   }
+   updatePlayerItem(_loc1_,player_ob,"head",60);
+   updatePlayerItem(_loc1_,player_ob,"face",50);
+   updatePlayerItem(_loc1_,player_ob,"hand",40);
+   updatePlayerItem(_loc1_,player_ob,"neck",30);
+   updatePlayerItem(_loc1_,player_ob,"body",20);
+   updatePlayerItem(_loc1_,player_ob,"feet",10);
+   updatePlayerFrame(_loc3_,_loc1_.frame);
+}
+function updateColour(mc, colour_id)
+{
+   var _loc1_ = new Color(mc);
+   _loc1_.setRGB(SHELL.getPlayerHexFromId(colour_id));
+}
+function setupDepthList()
+{
+   depth_list = new Array();
+   var _loc1_ = 0;
+   while(_loc1_ < 100)
+   {
+      depth_list[_loc1_] = undefined;
+      _loc1_ = _loc1_ + 1;
+   }
+}
+function findPlayerDepth(player_id)
+{
+   if(player_id == SHELL.getMyPlayerId())
+   {
+      depth_list[99] = player_id;
+      return 99;
+   }
+   for(var _loc2_ in depth_list)
+   {
+      if(depth_list[_loc2_] == undefined)
+      {
+         depth_list[_loc2_] = player_id;
+         return Number(_loc2_);
+      }
+   }
+}
+function removePlayerDepth(player_id)
+{
+   for(var _loc2_ in depth_list)
+   {
+      if(depth_list[_loc2_] == player_id)
+      {
+         depth_list[_loc2_] = undefined;
+         break;
+      }
+   }
+}
+function updatePlayerItem(mc, ob, name, depth)
+{
+   if(ob[name] != mc[name])
+   {
+      removeMovieClip(mc[name + "_mc"]);
+      mc.createEmptyMovieClip(name + "_mc",depth);
+      loadPlayerItem(mc[name + "_mc"],ob[name]);
+      mc[name] = ob[name];
+   }
+}
+function loadPlayerItem(mc, item_id)
+{
+   var _loc3_;
+   var _loc2_;
+   var _loc1_;
+   if(item_id > 0)
+   {
+      _loc3_ = SHELL.getPath("clothing_sprites") + item_id + ".swf";
+      mc._visible = false;
+      _loc2_ = new MovieClipLoader();
+      _loc1_ = new Object();
+      _loc1_.onLoadStart = function(target_mc)
+      {
+         target_mc._visible = false;
+      };
+      _loc1_.onLoadInit = function(target_mc)
+      {
+         updatePlayerFrame(target_mc._parent.player_id);
+         target_mc._visible = true;
+      };
+      _loc2_.addListener(_loc1_);
+      _loc2_.loadClip(_loc3_,mc);
+   }
+}
+function loadPlayerBook(player_id, book_id)
+{
+   var _loc1_ = getPlayerMovieClip(player_id);
+   if(book_id == undefined)
+   {
+      book_id = 1;
+   }
+   var _loc3_;
+   if(_loc1_.is_ready && !_loc1_.is_moving)
+   {
+      _loc3_ = SHELL.getPath("clothing_book" + book_id);
+      _loc1_.book_mc.createEmptyMovieClip("load_mc",1);
+      _loc1_.book_mc.load_mc.loadMovie(_loc3_);
+      _loc1_.is_reading = true;
+      updatePlayerFrame(player_id,1);
+   }
+}
+function removePlayerBook(player_id)
+{
+   var _loc1_ = getPlayerMovieClip(player_id);
+   removeMovieClip(_loc1_.book_mc.load_mc);
+   _loc1_.is_reading = false;
+}
+function updatePlayerPosition(player_id, x, y)
+{
+   var _loc1_ = getPlayerMovieClip(player_id);
+   var _loc6_ = getBalloonMovieClip(player_id);
+   var _loc5_ = getNicknameMovieClip(player_id);
+   x = getValidXPosition(x);
+   y = getValidYPosition(y);
+   _loc1_._x = x;
+   _loc1_._y = y;
+   _loc6_._x = x;
+   _loc6_._y = y;
+   _loc5_._x = x;
+   _loc5_._y = y;
+   updatePlayerDepth(_loc1_,_loc1_.depth_id);
+   if(SHELL.isMyPlayer(player_id))
+   {
+      player_x = x;
+      player_y = y;
+   }
+}
+function updatePlayerFrame(player_id, frame, is_action)
+{
+   var _loc1_ = getPlayerMovieClip(player_id);
+   if(frame == undefined)
+   {
+      frame = _loc1_.frame;
+   }
+   var _loc2_;
+   if(frame == 25 || frame == 26)
+   {
+      _loc2_ = SHELL.getSecretFrame(player_id,frame);
+   }
+   else
+   {
+      _loc2_ = frame;
+   }
+   _loc1_.art_mc.gotoAndStop(1);
+   _loc1_.art_mc.gotoAndStop(_loc2_);
+   updateColour(_loc1_.art_mc.body,_loc1_.colour_id);
+   updatePlayerItemFrame(_loc1_.head_mc,_loc2_);
+   updatePlayerItemFrame(_loc1_.face_mc,_loc2_);
+   updatePlayerItemFrame(_loc1_.neck_mc,_loc2_);
+   updatePlayerItemFrame(_loc1_.body_mc,_loc2_);
+   updatePlayerItemFrame(_loc1_.hand_mc,_loc2_);
+   updatePlayerItemFrame(_loc1_.feet_mc,_loc2_);
+   if(is_action)
+   {
+      _loc1_.frame = 1;
+   }
+   else
+   {
+      _loc1_.frame = frame;
+   }
+}
+function clickPlayer(player_id, nickname)
+{
+   INTERFACE.showPlayerWidget(player_id,nickname);
+}
+function setPlayerAction(action)
+{
+   player_action = action;
+}
+function getPlayerAction()
+{
+   return player_action;
+}
+function validateUpdateFrame(player_id, frame)
+{
+   var _loc1_ = getPlayerMovieClip(player_id);
+   if(_loc1_.is_reading || _loc1_.is_table)
+   {
+      return false;
+   }
+   if(!_loc1_.is_moving)
+   {
+      if(frame > 8 && frame < 17)
+      {
+         return false;
+      }
+      if(frame < 27)
+      {
+         return true;
+      }
+      return false;
+   }
+   return false;
+}
+function updatePlayerItemFrame(mc, frame)
+{
+   mc.gotoAndStop(1);
+   mc.gotoAndStop(frame);
+}
+function getValidXPosition(x)
+{
+   if(x < MAP_WIDTH_MIN)
+   {
+      return MAP_WIDTH_MIN;
+   }
+   if(x > MAP_WIDTH_MAX)
+   {
+      return MAP_WIDTH_MAX;
+   }
+   return Math.round(x);
+}
+function getValidYPosition(y)
+{
+   if(y < MAP_HEIGHT_MIN)
+   {
+      return MAP_HEIGHT_MIN;
+   }
+   if(y > MAP_HEIGHT_MAX)
+   {
+      return MAP_HEIGHT_MAX;
+   }
+   return Math.round(y);
+}
+function isValidXPosition(x)
+{
+   if(x < MAP_WIDTH_MIN)
+   {
+      return false;
+   }
+   if(x > MAP_WIDTH_MAX)
+   {
+      return false;
+   }
+   return true;
+}
+function isValidYPosition(y)
+{
+   if(y < MAP_HEIGHT_MIN)
+   {
+      return false;
+   }
+   if(y > MAP_HEIGHT_MAX)
+   {
+      return false;
+   }
+   return true;
+}
+function getPlayerMovieClip(player_id)
+{
+   var _loc1_ = getRoomMovieClip();
+   return _loc1_["p" + player_id];
+}
+function getBalloonMovieClip(player_id)
+{
+   return INTERFACE.balloons_mc["p" + player_id];
+}
+function getNicknameMovieClip(player_id)
+{
+   return INTERFACE.nicknames_mc["p" + player_id];
+}
+function findRandomLocation(n, d)
+{
+   return Math.floor(n + (random(d) - d / 2));
+}
+function showAllPuffles()
+{
+   puffleManager.showAllPuffles();
+}
+function hideAllPuffles()
+{
+   puffleManager.hideAllPuffles();
+}
+function startMouse()
+{
+   is_mouse_active = true;
+   this.onMouseMove = function()
+   {
+      var _loc1_;
+      if(getPlayerAction() == "wait")
+      {
+         _loc1_ = getPlayerDirectionToMouse();
+         if(_loc1_ != current_direction_to_mouse)
+         {
+            current_direction_to_mouse = _loc1_;
+            updatePlayerFrame(SHELL.getMyPlayerId(),_loc1_);
+         }
+      }
+   };
+   mouse_mc.useHandCursor = false;
+   mouse_mc.tabEnabled = false;
+   mouse_mc.onRelease = clickMouse;
+}
+function clickMouse()
+{
+   var _loc2_;
+   var _loc1_;
+   if(getPlayerAction() != "busy")
+   {
+      _loc2_ = Math.round(_xmouse);
+      _loc1_ = Math.round(_ymouse);
+      if(!isMouseOverInterface(_loc2_,_loc1_))
+      {
+         sendPlayerMove(_loc2_,_loc1_);
+      }
+   }
+}
+function getPlayerDirectionToMouse()
+{
+   var _loc2_ = Math.round(_xmouse);
+   var _loc1_ = Math.round(_ymouse) + 40;
+   var _loc3_ = findAngle(player_x,player_y,_loc2_,_loc1_);
+   return findDirection(_loc3_);
+}
+function stopMouse()
+{
+   is_mouse_active = false;
+   this.onMouseMove = null;
+   this.onMouseDown = null;
+   mouse_mc.onRelease = null;
+}
+function isMouseActive()
+{
+   return is_mouse_active;
+}
+function isMouseOverInterface(x, y)
+{
+   if(INTERFACE.interface_mc.hitTest(x,y,true))
+   {
+      return true;
+   }
+   if(INTERFACE.debug_mc.hitTest(x,y,true))
+   {
+      return true;
+   }
+   if(getRoomInterfaceMovieClip().hitTest(x,y,true))
+   {
+      return true;
+   }
+   if(debug_mc.hitTest(x,y,true))
+   {
+      return true;
+   }
+   return false;
+}
+function movePlayer(player_id, target_x, target_y, is_trigger, frame)
+{
+   var _loc4_ = getRoomMovieClip();
+   if(is_trigger == undefined)
+   {
+      is_trigger = true;
+   }
+   var mc = getPlayerMovieClip(player_id);
+   var start_x = Math.round(mc._x);
+   var start_y = Math.round(mc._y);
+   if(mc.is_reading)
+   {
+      removePlayerBook(player_id);
+   }
+   var _loc3_;
+   var _loc2_;
+   if(!mc.is_ready)
+   {
+      updatePlayerPosition(player_id,target_x,target_y);
+   }
+   else
+   {
+      _loc3_ = findDistance(start_x,start_y,target_x,target_y);
+      if(_loc4_.ease_method == "easeInOutQuad")
+      {
+         var easeFunction = mathEaseInOutQuad;
+      }
+      else
+      {
+         var easeFunction = mathLinearTween;
+      }
+      _loc2_ = findAngle(start_x,start_y,target_x,target_y);
+      var d = findDirection(_loc2_);
+      var duration = _loc3_ / 4;
+      var change_x = target_x - start_x;
+      var change_y = target_y - start_y;
+      mc.is_moving = true;
+      updatePlayerFrame(player_id,d + 8);
+      var t = 0;
+      mc.onEnterFrame = function()
+      {
+         t++;
+         if(t < duration)
+         {
+            x = easeFunction(t,start_x,change_x,duration);
+            y = easeFunction(t,start_y,change_y,duration);
+            updatePlayerPosition(player_id,x,y);
+         }
+         else
+         {
+            mc.is_moving = false;
+            updatePlayerPosition(player_id,target_x,target_y);
+            updatePlayerFrame(player_id,d);
+            SHELL.sendPlayerMoveDone(player_id);
+            this.onEnterFrame = null;
+            delete this.onEnterFrame;
+            if(SHELL.isMyPlayer(player_id))
+            {
+               setPlayerAction("wait");
+               if(is_trigger && isMouseActive())
+               {
+                  checkTrigger(mc);
+               }
+               if(frame != undefined)
+               {
+                  sendPlayerFrame(frame);
+               }
+            }
+         }
+      };
+   }
+}
+function findPlayerPath(player_id, x, y)
+{
+   var _loc12_ = getPlayerMovieClip(player_id);
+   var _loc7_ = getRoomBlockMovieClip();
+   var _loc13_ = getValidXPosition(x);
+   var _loc14_ = getValidYPosition(y);
+   var _loc11_ = Math.round(_loc12_._x);
+   var _loc10_ = Math.round(_loc12_._y);
+   var _loc15_ = findDistance(_loc11_,_loc10_,_loc13_,_loc14_);
+   var _loc6_ = Math.round(_loc15_);
+   var _loc9_ = (_loc13_ - _loc11_) / _loc6_;
+   var _loc8_ = (_loc14_ - _loc10_) / _loc6_;
+   var _loc4_ = _loc11_;
+   var _loc3_ = _loc10_;
+   var _loc5_ = new Object();
+   _loc5_.x = _loc11_;
+   _loc5_.y = _loc10_;
+   var _loc16_ = _loc7_.hitTest(_loc11_,_loc10_,true);
+   var _loc2_;
+   var _loc1_;
+   while(_loc6_ > 0)
+   {
+      _loc4_ += _loc9_;
+      _loc3_ += _loc8_;
+      _loc2_ = Math.round(_loc4_);
+      _loc1_ = Math.round(_loc3_);
+      if(_loc7_.hitTest(_loc2_,_loc1_,true))
+      {
+         break;
+      }
+      _loc5_.x = _loc2_;
+      _loc5_.y = _loc1_;
+      _loc6_ = _loc6_ - 1;
+   }
+   return _loc5_;
+}
+function throwBall(player_id, target_x, target_y, start_height, max_height, wait)
+{
+   var _loc2_ = getPlayerMovieClip(player_id);
+   var room_mc = getRoomMovieClip();
+   if(_loc2_.is_reading)
+   {
+      removePlayerBook(player_id);
+   }
+   var _loc3_;
+   var _loc7_;
+   var _loc6_;
+   var _loc5_;
+   if(_loc2_.is_ready && !_loc2_.is_moving)
+   {
+      if(throw_item_counter == undefined)
+      {
+         throw_item_counter = 0;
+      }
+      if(throw_item_counter > 10)
+      {
+         throw_item_counter = 0;
+      }
+      var start_x = _loc2_._x;
+      var start_y = _loc2_._y;
+      var c = throw_item_counter++;
+      _loc3_ = "i" + c;
+      if(room_mc[_loc3_] != undefined)
+      {
+         room_mc[_loc3_].removeMovieClip();
+      }
+      room_mc.attachMovie("ball",_loc3_,1000200 + c);
+      var mc = room_mc[_loc3_];
+      mc.player_id = player_id;
+      mc._x = start_x;
+      mc._y = start_y;
+      updateItemDepth(mc,c);
+      _loc7_ = findDistance(start_x,start_y,target_x,target_y);
+      _loc6_ = findAngle(start_x,start_y,target_x,target_y);
+      _loc5_ = Math.round(findDirection(_loc6_) / 2);
+      updatePlayerFrame(player_id,26 + _loc5_);
+      var duration = _loc7_ / 15;
+      var change_x = target_x - start_x;
+      var change_y = target_y - start_y;
+      var peak = duration / 2;
+      var change_height1 = max_height - start_height;
+      var change_height2 = - max_height;
+      mc.art._y = start_height;
+      mc._visible = false;
+      var t = 0;
+      var w = 0;
+      mc.onEnterFrame = function()
+      {
+         if(w > wait)
+         {
+            mc._visible = true;
+            t++;
+            if(t < duration)
+            {
+               mc._x = mathLinearTween(t,start_x,change_x,duration);
+               mc._y = mathLinearTween(t,start_y,change_y,duration);
+               updateItemDepth(mc,c);
+               if(t < peak)
+               {
+                  mc.art._y = mathEaseOutQuad(t,start_height,change_height1,peak);
+               }
+               else
+               {
+                  mc.art._y = mathEaseInQuad(t - peak,max_height,change_height2,peak);
+               }
+            }
+            else
+            {
+               mc._x = target_x;
+               mc._y = target_y;
+               mc.art._y = 0;
+               mc.gotoAndStop(2);
+               room_mc.handleThrow(mc);
+               SHELL.sendThrowBallDone(mc.player_id,mc);
+               this.onEnterFrame = null;
+            }
+         }
+         else
+         {
+            w++;
+         }
+      };
+   }
+}
+function setupTables()
+{
+   var _loc1_ = getTableListFromRoom();
+   if(_loc1_ != undefined && _loc1_.length > 0)
+   {
+      SHELL.getTablesPopulationById(_loc1_);
+   }
+}
+function sendJoinTable(name, table_id, is_prompt)
+{
+   var _loc2_;
+   if(is_prompt)
+   {
+      setActiveTable(name,table_id);
+      _loc2_ = SHELL.getLocalizedString(name + "_prompt");
+      INTERFACE.showPrompt("game",_loc2_,undefined,clickJoinTablePrompt);
+   }
+   else
+   {
+      SHELL.sendJoinTableById(table_id);
+   }
+}
+function clickJoinTablePrompt()
+{
+   var _loc1_ = getActiveTable();
+   traceObject(_loc1_);
+   sendJoinTable(_loc1_.name,_loc1_.table_id,false);
+}
+function handleJoinTable(ob)
+{
+   traceObject(ob);
+   var _loc5_ = ob.table_id;
+   var _loc1_ = ob.seat_id;
+   setActiveTableSeat(_loc1_);
+   var _loc3_ = getActiveTable();
+   var _loc4_ = _loc3_.name;
+   stopMouse();
+   movePlayerToTableSeat(_loc5_,_loc1_);
+   INTERFACE.showGameWidget(_loc4_);
+}
+function handleUpdateTable(table_ob)
+{
+   traceObject(table_ob);
+   var _loc5_ = table_ob.table_id;
+   var _loc4_ = table_ob.num_players;
+   var _loc2_ = _loc4_ + 1;
+   var _loc1_ = getTableMovieClip(_loc5_);
+   if(_loc2_ > _loc1_._totalframes)
+   {
+      _loc1_.gotoAndStop(_loc1_._totalframes);
+   }
+   else
+   {
+      _loc1_.gotoAndStop(_loc2_);
+   }
+}
+function sendLeaveTable()
+{
+   SHELL.sendLeaveTable();
+   movePlayerToTableDone();
+   startMouse();
+}
+function movePlayerToTableSeat(table_id, seat_id)
+{
+   var _loc1_ = getTableSeatMovieClip(table_id,seat_id);
+   var _loc4_ = getTableSeatFrame(table_id,seat_id);
+   var _loc2_ = {x:_loc1_._x,y:_loc1_._y};
+   _loc1_._parent.localToGlobal(_loc2_);
+   var _loc7_ = Math.round(_loc2_.x);
+   var _loc6_ = Math.round(_loc2_.y);
+   sendPlayerMove(_loc7_,_loc6_,false,_loc4_);
+}
+function movePlayerToTableDone()
+{
+   var _loc3_ = getActiveTable();
+   var _loc5_ = _loc3_.table_id;
+   var _loc4_ = _loc3_.seat_id;
+   var _loc1_ = getTableDoneMovieClip(_loc5_,_loc4_);
+   var _loc2_ = {x:_loc1_._x,y:_loc1_._y};
+   _loc1_._parent.localToGlobal(_loc2_);
+   var _loc7_ = Math.round(_loc2_.x);
+   var _loc6_ = Math.round(_loc2_.y);
+   sendPlayerMove(_loc7_,_loc6_,false);
+}
+function setActiveTable(name, table_id, seat_id)
+{
+   active_table = {name:name,table_id:table_id,seat_id:seat_id};
+}
+function setActiveTableSeat(seat_id)
+{
+   active_table.seat_id = seat_id;
+}
+function getActiveTable()
+{
+   return active_table;
+}
+function getTableListFromRoom()
+{
+   var _loc1_ = getRoomMovieClip();
+   return _loc1_.table_list;
+}
+function getTableSeatFrame(table_id, seat_id)
+{
+   var _loc1_ = getTableMovieClip(table_id);
+   var _loc2_ = _loc1_.seat_frames[seat_id - 1];
+   return _loc2_;
+}
+function getTableMovieClip(table_id)
+{
+   var _loc1_ = getRoomMovieClip();
+   return _loc1_["table" + table_id + "_mc"];
+}
+function getTableSeatMovieClip(table_id, seat_id)
+{
+   var _loc1_ = getTableMovieClip(table_id);
+   return _loc1_["seat" + seat_id + "_mc"];
+}
+function getTableDoneMovieClip(table_id, seat_id)
+{
+   var _loc1_ = getTableMovieClip(table_id);
+   return _loc1_["done" + seat_id + "_mc"];
+}
+function setupWaddle()
+{
+   var _loc1_ = getWaddleListFromRoom();
+   if(_loc1_ != undefined && _loc1_.length > 0)
+   {
+      SHELL.getWaddlePopulationById(_loc1_);
+   }
+}
+function handleUpdateWaddle(ob)
+{
+   traceObject(ob);
+   var _loc6_ = ob.waddle_id;
+   var _loc3_ = ob.player_list;
+   var _loc4_;
+   var _loc1_;
+   var _loc2_;
+   var _loc5_;
+   for(var _loc7_ in _loc3_)
+   {
+      _loc4_ = Number(_loc7_);
+      _loc1_ = getWaddleSeatMovieClip(_loc6_,_loc4_);
+      if(_loc3_[_loc7_] != undefined)
+      {
+         _loc2_ = SHELL.getPlayerObjectByNickname(_loc3_[_loc7_]);
+         _loc5_ = SHELL.getCurrentRoomId();
+         if(_loc2_ != undefined)
+         {
+            if(_loc5_ == 230 && _loc2_.hand == 5021)
+            {
+               _loc1_._visible = false;
+            }
+            else
+            {
+               _loc1_._visible = true;
+            }
+         }
+         else
+         {
+            _loc1_._visible = false;
+         }
+      }
+      else
+      {
+         _loc1_._visible = false;
+      }
+   }
+}
+function sendJoinWaddle(name, waddle_id, is_prompt)
+{
+   active_waddle_id = waddle_id;
+   active_waddle_name = name;
+   var _loc7_;
+   var _loc2_;
+   var _loc5_;
+   var _loc1_;
+   if(is_prompt)
+   {
+      _loc7_ = SHELL.getLocalizedString(name + "_prompt");
+      INTERFACE.showPrompt("game",_loc7_,undefined,clickJoinWaddlePrompt);
+   }
+   else
+   {
+      _loc2_ = true;
+      _loc5_ = SHELL.getWaddleById(waddle_id);
+      traceObject(_loc5_);
+      _loc1_ = _loc5_.player_list;
+      for(var _loc3_ in _loc1_)
+      {
+         if(_loc1_[_loc3_] == undefined)
+         {
+            _loc2_ = false;
+            break;
+         }
+      }
+      if(!_loc2_)
+      {
+         SHELL.sendJoinWaddleById(waddle_id);
+      }
+   }
+}
+function clickJoinWaddlePrompt()
+{
+   sendJoinWaddle(active_waddle_name,active_waddle_id,false);
+}
+function handleJoinWaddle(ob)
+{
+   traceObject(ob);
+   var _loc2_ = active_waddle_id;
+   var _loc3_ = active_waddle_name;
+   var _loc1_ = ob.seat_id;
+   active_seat_id = _loc1_;
+   stopMouse();
+   movePlayerToWaddleSeat(_loc2_,_loc1_);
+   INTERFACE.showWaddleWidget(_loc3_,_loc2_);
+}
+function sendLeaveWaddle()
+{
+   SHELL.sendLeaveWaddle();
+   movePlayerToWaddleDone();
+   startMouse();
+   SHELL.sendLeaveWaddle();
+}
+function movePlayerToWaddleSeat(waddle_id, seat_id)
+{
+   var _loc1_ = getWaddleSeatMovieClip(waddle_id,seat_id);
+   var _loc5_ = getWaddleSeatFrame(waddle_id,seat_id);
+   var _loc2_ = {x:_loc1_._x,y:_loc1_._y};
+   _loc1_._parent.localToGlobal(_loc2_);
+   var _loc7_ = Math.round(_loc2_.x);
+   var _loc6_ = Math.round(_loc2_.y);
+   sendPlayerMove(_loc7_,_loc6_,false,_loc5_);
+}
+function movePlayerToWaddleDone()
+{
+   var _loc4_ = active_waddle_id;
+   var _loc3_ = active_seat_id;
+   var _loc1_ = getWaddleDoneMovieClip(_loc4_,_loc3_);
+   var _loc2_ = {x:_loc1_._x,y:_loc1_._y};
+   _loc1_._parent.localToGlobal(_loc2_);
+   var _loc6_ = Math.round(_loc2_.x);
+   var _loc5_ = Math.round(_loc2_.y);
+   sendPlayerMove(_loc6_,_loc5_,false);
+}
+function getWaddleMovieClip(waddle_id)
+{
+   var _loc1_ = getRoomMovieClip();
+   return _loc1_["waddle" + waddle_id + "_mc"];
+}
+function getWaddleSeatMovieClip(waddle_id, seat_id)
+{
+   var _loc1_ = getWaddleMovieClip(waddle_id);
+   return _loc1_["seat" + seat_id + "_mc"];
+}
+function getWaddleDoneMovieClip(waddle_id, seat_id)
+{
+   var _loc1_ = getWaddleMovieClip(waddle_id);
+   return _loc1_["done" + seat_id + "_mc"];
+}
+function getWaddleListFromRoom()
+{
+   var _loc1_ = getRoomMovieClip();
+   return _loc1_.waddle_list;
+}
+function getWaddleSeatFrame(waddle_id, seat_id)
+{
+   var _loc1_ = getWaddleMovieClip(waddle_id);
+   var _loc2_ = _loc1_.seat_frames[seat_id];
+   return _loc2_;
+}
+function getActiveWaddleId()
+{
+   return active_waddle_id;
+}
+function updatePlayerDepth(clip, depth)
+{
+   var _loc2_ = Math.floor(clip._y);
+   var _loc1_ = depth + 1 + 900 + 1000 * _loc2_;
+   clip.swapDepths(_loc1_);
+   return _loc1_;
+}
+function updatePuffleDepth(clip, depth)
+{
+   return updatePlayerDepth(clip,depth);
+}
+function updateObjectDepth(clip)
+{
+   var _loc4_ = Math.floor(clip._x);
+   var _loc3_ = Math.floor(clip._y);
+   var _loc1_ = _loc4_ + 1000 * _loc3_;
+   clip.swapDepths(_loc1_);
+   return _loc1_;
+}
+function updateItemDepth(clip, depth)
+{
+   var _loc4_ = Math.floor(clip._x);
+   var _loc3_ = Math.floor(clip._y);
+   var _loc1_ = depth + 1 + 800 + 1000 * _loc3_;
+   clip.swapDepths(_loc1_);
+   return _loc1_;
+}
+function findAngle(x1, y1, x2, y2)
+{
+   var _loc3_ = x2 - x1;
+   var _loc2_ = y2 - y1;
+   var _loc1_ = int(Math.atan2(_loc2_,_loc3_) * 57.29577951308232 - 90);
+   if(_loc1_ < 0)
+   {
+      return _loc1_ + 360;
+   }
+   return _loc1_;
+}
+function findDirection(angle)
+{
+   var _loc1_ = Math.round(angle / 45) + 1;
+   if(_loc1_ > 8)
+   {
+      _loc1_ = 1;
+   }
+   return _loc1_;
+}
+function findDistance(x1, y1, x2, y2)
+{
+   var _loc2_ = x2 - x1;
+   var _loc1_ = y2 - y1;
+   return Math.sqrt(_loc2_ * _loc2_ + _loc1_ * _loc1_);
+}
+function replaceString(target, word, message)
+{
+   return message.split(target).join(word);
+}
+SHELL = _parent;
+INTERFACE = _parent.INTERFACE;
+var ENGINE = this;
+var IGLOO;
+var puffleManager;
+puffleManager = new com.clubpenguin.engine.PuffleManager(SHELL,_loc1_,INTERFACE);
+SHELL.addListener(SHELL.START_ENGINE,handleStartEngine);
+SHELL.addListener(SHELL.UPDATE_SHELL_STATE,handleUpdateShellState);
+SHELL.addListener(SHELL.ADD_PLAYER,handleAddPlayer);
+SHELL.addListener(SHELL.REMOVE_PLAYER,handleRemovePlayer);
+SHELL.addListener(SHELL.UPDATE_PLAYER,handleUpdatePlayer);
+SHELL.addListener(SHELL.PLAYER_ACTION,handlePlayerAction);
+SHELL.addListener(SHELL.PLAYER_FRAME,handlePlayerFrame);
+SHELL.addListener(SHELL.PLAYER_MOVE,handlePlayerMove);
+SHELL.addListener(SHELL.THROW_BALL,handleThrowBall);
+SHELL.addListener(SHELL.ADD_PUFFLE,handleAddPuffle);
+SHELL.addListener(SHELL.REQUEST_PUFFLE_MOVE,handleRequestPuffleMove);
+SHELL.addListener(SHELL.PUFFLE_MOVE,handlePuffleMove);
+SHELL.addListener(SHELL.PUFFLE_FRAME,handlePuffleFrame);
+SHELL.addListener(SHELL.PUFFLE_WALK,handlePuffleWalk);
+SHELL.addListener(SHELL.PUFFLE_INTERACTION,handlePuffleInteraction);
+SHELL.addListener(SHELL.OPEN_BOOK,handleOpenBook);
+SHELL.addListener(SHELL.CLOSE_BOOK,handleCloseBook);
+SHELL.addListener(SHELL.JOIN_ROOM,handleJoinRoom);
+SHELL.addListener(SHELL.JOIN_PLAYER_IGLOO,handleJoinPlayerIgloo);
+SHELL.addListener(SHELL.JOIN_GAME,handleJoinGame);
+SHELL.addListener(SHELL.JOIN_TABLE,handleJoinTable);
+SHELL.addListener(SHELL.JOIN_WADDLE,handleJoinWaddle);
+SHELL.addListener(SHELL.UPDATE_TABLE,handleUpdateTable);
+SHELL.addListener(SHELL.UPDATE_WADDLE,handleUpdateWaddle);
+SHELL.addListener(SHELL.GAME_OVER,handleGameOver);
+MAX_SCREEN_WIDTH = 760;
+MAX_SCREEN_HEIGHT = 480;
+MAP_MARGIN = 20;
+MAP_WIDTH_MIN = MAP_MARGIN;
+MAP_WIDTH_MAX = MAX_SCREEN_WIDTH - MAP_MARGIN;
+MAP_HEIGHT_MIN = MAP_MARGIN;
+MAP_HEIGHT_MAX = MAX_SCREEN_HEIGHT - MAP_MARGIN;
+my_room_movieclips = new Object();
+is_ball_moving = false;
+is_room_ready = false;
+var active_game;
+var game_over_room;
+var game_over_object = new Object();
+var player_action = "wait";
+var player_x = 0;
+var player_y = 0;
+var add_more_players = false;
+var depth_list = [];
+var is_mouse_active = false;
+var current_direction_to_mouse = 0;
+var active_table = new Object();
+var pending_table = new Object();
+var active_waddle_id;
+var active_waddle_name;
+var active_seat_id;
+list[waddle1] = ["name1","name2"];
+list[waddle2] = ["name1","name2"];
+list[waddle3] = ["name1","name2"];
+list[waddle4] = ["name1","name2"];
+list[waddle1][0] = "name";
+mathLinearTween = function(t, b, c, d)
+{
+   return c * t / d + b;
+};
+mathEaseInQuad = function(t, b, c, d)
+{
+   return c * (t /= d) * t + b;
+};
+mathEaseOutQuad = function(t, b, c, d)
+{
+   return (- c) * (t /= d) * (t - 2) + b;
+};
+mathEaseInOutQuad = function(t, b, c, d)
+{
+   if((t /= d / 2) < 1)
+   {
+      return c / 2 * t * t + b;
+   }
+   return (- c) / 2 * ((t = t - 1) * (t - 2) - 1) + b;
+};

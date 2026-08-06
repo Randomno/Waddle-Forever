@@ -1297,6 +1297,10 @@ Unknown if its teleporting to village functions would be accurate`
       comment: 'Made by Blue Kirby. Theoretical first Post-CPIP interface, built on top of Feb 2009 interface, removing membership badge. Also removed showTutorialPrompt function call'
     },
     {
+      file: 'interfaces/2008_november.swf',
+      comment: 'Made by Randomno from Feb 2009 interface. Removes membership badges but retains tutorial'
+    },
+    {
       file: 'interfaces/2010_may.swf',
       comment: 'Made by Supermanover and Blue Kirby. Initially, Super removed the stamps from the legacy media modified interface that was in WF. Blue Kirby removed the owned igloo functionality'
     },
