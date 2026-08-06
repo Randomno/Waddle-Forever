@@ -1,3 +1,11 @@
+function removeBalloonByPlayerId(player_id)
+{
+   var _loc2_ = getBalloonMovieClip(player_id);
+   if(_loc2_ != undefined)
+   {
+      _loc2_.removeMovieClip();
+   }
+}
 function handleStartEngine()
 {
 }
@@ -593,7 +601,7 @@ function addPlayer(player_ob)
    removePlayer(player_id);
    var _loc7_ = findPlayerDepth(player_id);
    var _loc6_ = "p" + player_id;
-   var balloon = INTERFACE.balloons_mc.attachMovie("balloon",_loc6_,_loc5_);
+   var balloon = INTERFACE.balloons_mc.attachMovie("balloon",_loc6_,_loc7_);
    balloon.gotoAndStop(balloon._totalframes);
    INTERFACE.nicknames_mc.attachMovie("nickname",_loc6_,_loc7_);
    INTERFACE.nicknames_mc[_loc6_].name_txt.text = player_ob.nickname;
@@ -717,7 +725,7 @@ function removePlayer(player_id)
    var _loc3_ = getNicknameMovieClip(player_id);
    _loc2_.removeMovieClip();
    _loc3_.removeMovieClip();
-   INTERFACE.removeBalloonByPlayerId(player_id);
+   removeBalloonByPlayerId(player_id);
    removePlayerDepth(player_id);
 }
 function updatePlayerFromId(player_id)
